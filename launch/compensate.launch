@@ -1,8 +1,9 @@
 <launch>
-    <node pkg="selfie_stm32_bridge" type="selfie_stm32_bridge" name="stm_bridge" output="screen">
+    <!--node pkg="selfie_stm32_bridge" type="selfie_stm32_bridge" name="stm_bridge" output="screen">
         <remap from="drive" to="raw_drive"/>
-    </node>
+    </node-->
     <node pkg="performance_monitor" type="delta_compensator.py" name="delta_compensator">
-        <param name="lookup_table" value="angle_data.csv"/>
+        <param name="angle_lookup_table" value="angle_data.csv"/>
+        <param name="speed_lookup_table" value="speed_angle_ratio_data.csv"/>
     </node>
 </launch>
