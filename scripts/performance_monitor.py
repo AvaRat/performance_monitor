@@ -13,15 +13,18 @@ class Monitor:
     def __init__(self, s_begin, s_end, data_file):
         self.s_begin = s_begin
         self.s_end = s_end
-        self.data_file = join(dirname(dirname(abspath(__file__))), data_file)
+        self.data_file = join(join(dirname(dirname(abspath(__file__))),'data'), data_file)
         self.track_progress = []
         self.deviation = []
+        self.last_deviation = 0
         self.time = []
         self.begin_time = rospy.Time.now()
         self.speed = []
+        self.last_speed = 0
         self.position = []
+        self.last_position = {'x':0, 'y':0}
         self.steering_angle = []
-        self.prev_time = rospy.Time.now()
+        self.init_time = 0
 
         
 
@@ -29,39 +32,45 @@ class Monitor:
     def s_callback(self, msg):
         if(msg.data < s_begin):
             pass
-        else:
+        elif(msg.data <= self.s_end):
+            if self.init_time == 0:
+                self.init_time = rospy.Time.now()
             self.track_progress.append(msg.data)
-            t = self.time[-1]
-            t = t + (rospy.Time.now()-self.prev_time).to_sec()
+            t = (rospy.Time.now()-self.init_time).to_sec()
             self.time.append(t)
+            self.deviation.append(self.last_deviation)
+            self.speed.append(self.last_speed)
+            self.position.append(self.last_position)
+
+
     def d_callback(self, msg):
         if(msg.data < s_begin):
             pass
         else:
-            self.deviation.append(msg.data)
+            self.last_deviation = msg.data
     
     def speed_callback(self, msg):
         if(msg.data < self.s_begin):
             pass
         else:
-            self.speed.append(msg.data)
+            self.last_speed = msg.data
+
     def tf_callback(self, trans):
         x = trans.transform.translation.x
         y = trans.transform.translation.y
-        self.position.append({'x':x, 'y':y})
+        self.last_position = {'x':x, 'y':y}
     
     def print_summary(self):
         print('writing to data file....')
         with open(self.data_file, 'w+') as file:
             csv_writer = csv.writer(file, delimiter=',')
-            print('ok')
             csv_writer.writerow(['t', 'speed', 'x_pos', 'y_pos', 'track_progress', 'deviation'])
             min_el = np.min([len(self.time), len(self.speed), len(self.position)])
-            print('min el: ' +repr(min_el))
+
             for i in range(min_el):
                 csv_writer.writerow([self.time[i], self.speed[i], self.position[i]['x'], self.position[i]['y'], self.track_progress[i], self.deviation[i]])
-        print('nr of messages received:\nspeed_msgs:' +repr(len(self.speed)) + '\ntf: ' +repr(len(self.position)) + '\ntrack_progress: '+repr(len(self.track_progress)))
-        print('distance covered: ' +repr(self.track_progress[-1]) + 'time: '+ repr(np.sum(self.time)))
+        print('distance covered: ' +repr(self.track_progress[-1]) + '\ntime: '+ repr(self.time[-1]))
+        print('max deviation: ' + repr(np.max(self.deviation)) + '\ndeviation sum: ' + repr(np.sum(self.deviation)) + '\ndeviation std: '+ repr(np.std(self.deviation)))
 
 if __name__ == '__main__':
     rospy.init_node('performance_monitor')

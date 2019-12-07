@@ -4,6 +4,7 @@ from ackermann_msgs.msg import AckermannDriveStamped
 from std_msgs.msg import Float32
 from os.path import dirname, abspath, join
 from scipy import interpolate
+import numpy as np
 import pandas as pd
 
 
@@ -25,13 +26,13 @@ class Converter:
 
 
     def target_drive_callback(self, msg):
+        self.current_steering_angle = msg.drive.steering_angle
         angle_converted = self.f_angle(msg.drive.steering_angle)
         msg.drive.steering_angle = angle_converted
         self.angle_pub.publish(msg)
-        self.current_steering_angle = msg.drive.steering_angle
     
     def shaft_speed_callback(self, msg):
-        speed_converted = msg.data * self.f_speed(self.current_steering_angle)
+        speed_converted = msg.data * self.f_speed(np.abs(self.current_steering_angle))
         msg.data = speed_converted
         self.speed_pub.publish(msg)
 
