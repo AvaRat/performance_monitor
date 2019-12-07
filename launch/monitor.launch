@@ -1,6 +1,8 @@
 <launch>
     <node pkg="performance_monitor" type="performance_monitor.py" name="performance_monitor" output="screen">
-        <param name="s_begin" type="double" value="99.4"/>
-        <param name="s_end" type="double" value="0.89"/>
+        <param name="s_begin" type="double" value="0.01"/>
+        <param name="s_end" type="double" value="2.0"/>
+        <param name="file_name" type="string" value="data.csv"/>
+        <remap from="speed" to="model_speed"/>
     </node>
 </launch>

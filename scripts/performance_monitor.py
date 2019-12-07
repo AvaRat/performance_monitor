@@ -17,6 +17,7 @@ class Monitor:
         self.track_progress = []
         self.deviation = []
         self.time = []
+        self.begin_time = rospy.Time.now()
         self.speed = []
         self.position = []
         self.steering_angle = []
@@ -29,9 +30,10 @@ class Monitor:
         if(msg.data < s_begin):
             pass
         else:
-            print('file in: '+repr(self.data_file))
             self.track_progress.append(msg.data)
-            self.time.append((rospy.Time.now()-prev_time).to_sec())
+            t = self.time[-1]
+            t = t + (rospy.Time.now()-self.prev_time).to_sec()
+            self.time.append(t)
     def d_callback(self, msg):
         if(msg.data < s_begin):
             pass
@@ -39,10 +41,14 @@ class Monitor:
             self.deviation.append(msg.data)
     
     def speed_callback(self, msg):
-        if(msg.data < s_begin):
+        if(msg.data < self.s_begin):
             pass
         else:
             self.speed.append(msg.data)
+    def tf_callback(self, trans):
+        x = trans.transform.translation.x
+        y = trans.transform.translation.y
+        self.position.append({'x':x, 'y':y})
     
     def print_summary(self):
         print('writing to data file....')
@@ -55,7 +61,7 @@ class Monitor:
             for i in range(min_el):
                 csv_writer.writerow([self.time[i], self.speed[i], self.position[i]['x'], self.position[i]['y'], self.track_progress[i], self.deviation[i]])
         print('nr of messages received:\nspeed_msgs:' +repr(len(self.speed)) + '\ntf: ' +repr(len(self.position)) + '\ntrack_progress: '+repr(len(self.track_progress)))
-        
+        print('distance covered: ' +repr(self.track_progress[-1]) + 'time: '+ repr(np.sum(self.time)))
 
 if __name__ == '__main__':
     rospy.init_node('performance_monitor')
@@ -81,11 +87,7 @@ if __name__ == '__main__':
             trans = tf_buffer.lookup_transform('skidpad',
                                                'base_link',
                                                rospy.Time(0))
-           
-            x = trans.transform.translation.x
-            y = trans.transform.translation.y
-            position.append({'x':x, 'y':y})
-            rospy.loginfo('got tf')
+            monitor.tf_callback(trans)       
         except (tf2_ros.LookupException,
                 tf2_ros.ConnectivityException,
                 tf2_ros.ExtrapolationException):
