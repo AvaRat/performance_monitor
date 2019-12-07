@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="selfie_stm32_bridge" type="selfie_stm32_bridge" name="stm_bridge" output="screen"/>
+    <node pkg="simulator" type="delta_compensator.py" name="delta_compensator">
+        <param name="lookup_table" value="angle_data.csv"/>
+    </node>
+</launch>
