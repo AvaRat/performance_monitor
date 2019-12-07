@@ -14,12 +14,11 @@ class Converter:
         self.y = self.lookup_table['delta_measured']
         self.f = interpolate.interp1d(self.y, self.x, fill_value='extrapolate', assume_sorted='false')
         self.pub = publisher
-        self.pub_msg = AckermannDriveStamped()
 
     def target_drive_callback(self, msg):
         angle_converted = self.f(msg.drive.steering_angle)
-        self.pub_msg.drive.steering_angle = angle_converted
-        self.pub.publish(self.pub_msg)
+        msg.drive.steering_angle = angle_converted
+        self.pub.publish(msg)
 
 ## main
 if __name__ == '__main__':
