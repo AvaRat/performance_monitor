@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="performance_monitor" type="performance_monitor.py" name="performance_monitor" output="screen">
+        <param name="s_begin" type="double" value="99.4"/>
+        <param name="s_end" type="double" value="0.89"/>
+    </node>
+</launch>
