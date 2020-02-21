@@ -1,9 +1,13 @@
 <launch>
-    <node pkg="performance_monitor" type="performance_monitor.py" name="performance_monitor" output="screen">
-        <param name="s_begin" type="double" value="0.01"/>
-        <param name="s_end" type="double" value="10.0"/>
-        <param name="file_name" type="string" value="performance_data.csv"/>
+    <node pkg="rosbag" type="play" name="player" output="screen" args="--clock /home/marcel/s6_tests/s6_12_grudnia/rosbags/corn_sfty_speed_3_v2.bag"/>
 
-        <remap from="speed" to="model_speed"/>
+    <node pkg="performance_monitor" type="performance_monitor.py" name="performance_monitor" output="screen">
+        <param name="base_frame" type="string" value="map"/>
+        <param name="target_frame" type="string" value="base_link"/>
+        <param name="end_distance" type="double" value="10.0"/>
+        <param name="file_name" type="string" value="corn_sfty_speed_3_v2.bag.csv"/>
+
+
+        <!--remap from="speed" to="model_speed"/-->
     </node>
 </launch>
