@@ -3,7 +3,6 @@ from os.path import dirname, abspath, join
 import csv
 import pickle
 import math
-
 import rospy
 import tf
 import tf2_ros
@@ -105,7 +104,7 @@ class Monitor:
         print('writing to data file '+repr(self.data_file)+' ...')
         with open(self.data_file, 'w+') as file:
             csv_writer = csv.writer(file, delimiter=',')
-            csv_writer.writerow(['t', 'speed', 'x_pos', 'y_pos', 'deviation', 'track_progress'])
+            csv_writer.writerow(['t', 'speed', 'x_pos', 'y_pos', 'deviation'])
             n_el = len(self.position)
             for i in range(n_el):
                 csv_writer.writerow([self.time[i], self.speed[i], self.position[i]['x'], self.position[i]['y'], self.deviation[i]])
