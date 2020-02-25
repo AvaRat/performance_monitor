@@ -14,9 +14,9 @@ import numpy as np
 
 class Monitor:
     def __init__(self, end_distance, data_file):
-        self.end_distance = end_distance
-        self.data_file = join(join(dirname(dirname(abspath(__file__))),'data'), data_file)
-        self.path_file = join(join(dirname(dirname(abspath(__file__))),'data'), 'path.pkl')
+        self.end_distance = end_distance    #currently not used
+        self.data_file = join(join(dirname(dirname(abspath(__file__))),'data'), data_file)  # file where data will be saved  csv format
+        self.path_file = join(join(dirname(dirname(abspath(__file__))),'data'), 'path.pkl') # file where path will be saved in .pkl format
         
         self.last_track_progress = 0
         self.track_progress = []
@@ -102,7 +102,7 @@ class Monitor:
         with open(self.path_file, 'wb') as f:
             pickle.dump(self.path, f)
 
-        print('writing to data file....')
+        print('writing to data file '+repr(self.data_file)+' ...')
         with open(self.data_file, 'w+') as file:
             csv_writer = csv.writer(file, delimiter=',')
             csv_writer.writerow(['t', 'speed', 'x_pos', 'y_pos', 'deviation', 'track_progress'])
