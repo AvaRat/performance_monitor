@@ -8,6 +8,7 @@ import tf
 import tf2_ros
 from std_msgs.msg import Float32
 from nav_msgs.msg import Path
+from sensor_msgs.msg import Imu
 import numpy as np
 
 
@@ -38,6 +39,9 @@ class Monitor:
 
         self.last_closest_path = []
         self.init_time = 0
+
+        self.last_lin_acc = {'x':0, 'y':0, 'z':0}
+        self.lin_acc = []
 
         
     def get_deviation(self, p):
@@ -91,9 +95,13 @@ class Monitor:
             deviation = self.get_deviation({'x':x, 'y':y})
             self.deviation.append(deviation)
             self.last_deviation = deviation
+
+            self.lin_acc.append(self.last_lin_acc)
             # track_progress = ?
             #self.track_progress.append(self.get_track_progress())
-            
+
+    def imu_callback(self, imu_msg):
+        self.last_lin_acc = {'x':imu_msg.linear_acceleration.x, 'y':imu_msg.linear_acceleration.y, 'z':imu_msg.linear_acceleration.z}
     
 
 
@@ -104,10 +112,10 @@ class Monitor:
         print('writing to data file '+repr(self.data_file)+' ...')
         with open(self.data_file, 'w+') as file:
             csv_writer = csv.writer(file, delimiter=',')
-            csv_writer.writerow(['t', 'speed', 'x_pos', 'y_pos', 'deviation'])
+            csv_writer.writerow(['t', 'speed', 'x_pos', 'y_pos', 'deviation', 'x_lin_acc', 'y_lin_acc', 'z_lin_acc'])
             n_el = len(self.position)
             for i in range(n_el):
-                csv_writer.writerow([self.time[i], self.speed[i], self.position[i]['x'], self.position[i]['y'], self.deviation[i]])
+                csv_writer.writerow([self.time[i], self.speed[i], self.position[i]['x'], self.position[i]['y'], self.deviation[i], self.lin_acc[i]['x'], self.lin_acc[i]['y'], self.lin_acc[i]['z']])
         try:
             print('time: '+ repr(self.time[-1])) # +repr(self.track_progress[-1]) 
            # print('max deviation: ' + repr(np.max(self.deviation)) + '\ndeviation sum: ' + repr(np.sum(self.deviation)) + '\ndeviation std: '+ repr(np.std(self.deviation)))
@@ -132,6 +140,7 @@ if __name__ == '__main__':
     rospy.Subscriber('/speed', Float32, monitor.speed_callback)
     rospy.Subscriber('/path', Path, monitor.path_callback)
     rospy.Subscriber('/closest_path_points', Path, monitor.closest_points_callback)
+    rospy.Subscriber('/imu', Imu, monitor.imu_callback)
 
     tf_buffer = tf2_ros.Buffer()
     tf2_ros.TransformListener(tf_buffer)
