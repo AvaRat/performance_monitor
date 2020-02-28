@@ -98,10 +98,9 @@ class Monitor:
             x = trans.transform.translation.x
             y = trans.transform.translation.y
             #t = (rospy.Time.now()-self.init_time).to_sec()
-            t = rospy.Time.now().to_sec()
+            t = rospy.Time.now()
             self.position.append({'x':x, 'y':y})
-            if(first == True):
-                self.time.append(t)
+            self.time.append(t)
             self.speed.append(self.last_speed)
             deviation = self.get_deviation({'x':x, 'y':y})
             self.deviation.append(deviation)
