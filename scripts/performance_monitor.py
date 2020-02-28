@@ -8,9 +8,15 @@ import tf
 import tf2_ros
 from std_msgs.msg import Float32
 from nav_msgs.msg import Path
+from std_msgs.msg import Bool
 from sensor_msgs.msg import Imu
 import numpy as np
 
+first = True
+
+def trigger(msg):
+    global first
+    first = false
 
 class Monitor:
     def __init__(self, end_distance, data_file):
@@ -61,7 +67,8 @@ class Monitor:
             if self.init_time == 0:
                 self.init_time = rospy.Time.now()
             self.track_progress.append(msg.data)
-            t = (rospy.Time.now()-self.init_time).to_sec()
+            #t = (rospy.Time.now()-self.init_time).to_sec()
+            t = rospy.Time.now()
             self.time.append(t)
             self.deviation.append(self.last_deviation)
             self.speed.append(self.last_speed)
@@ -81,6 +88,8 @@ class Monitor:
         for point in path_msg.poses:
             self.last_closest_path.append({'x':point.pose.position.x, 'y':point.pose.position.y})
 
+
+
     def tf_callback(self, trans):
         #first callback
         if(self.init_time == 0):
@@ -88,9 +97,11 @@ class Monitor:
         else:
             x = trans.transform.translation.x
             y = trans.transform.translation.y
-            t = (rospy.Time.now()-self.init_time).to_sec()
+            #t = (rospy.Time.now()-self.init_time).to_sec()
+            t = rospy.Time.now().to_sec()
             self.position.append({'x':x, 'y':y})
-            self.time.append(t)
+            if(first == True):
+                self.time.append(t)
             self.speed.append(self.last_speed)
             deviation = self.get_deviation({'x':x, 'y':y})
             self.deviation.append(deviation)
@@ -112,7 +123,7 @@ class Monitor:
         print('writing to data file '+repr(self.data_file)+' ...')
         with open(self.data_file, 'w+') as file:
             csv_writer = csv.writer(file, delimiter=',')
-            csv_writer.writerow(['t', 'speed', 'x_pos', 'y_pos', 'deviation', 'x_lin_acc', 'y_lin_acc', 'z_lin_acc'])
+            csv_writer.writerow(['time', 'speed', 'x_pos', 'y_pos', 'deviation', 'x_lin_acc', 'y_lin_acc', 'z_lin_acc'])
             n_el = len(self.position)
             for i in range(n_el):
                 csv_writer.writerow([self.time[i], self.speed[i], self.position[i]['x'], self.position[i]['y'], self.deviation[i], self.lin_acc[i]['x'], self.lin_acc[i]['y'], self.lin_acc[i]['z']])
@@ -130,6 +141,7 @@ if __name__ == '__main__':
     end_distance = rospy.get_param('~end_distance', 1.0)
     BASE_FRAME = rospy.get_param('~base_frame', 'map')
     TARGET_FRAME = rospy.get_param('~target_frame', 'base_link')
+    RATE = rospy.get_param('~rate', 100)
 
     data_file = rospy.get_param('~file_name', 'performance_data.csv')
     monitor = Monitor(end_distance, data_file)
@@ -142,8 +154,12 @@ if __name__ == '__main__':
     rospy.Subscriber('/closest_path_points', Path, monitor.closest_points_callback)
     rospy.Subscriber('/imu', Imu, monitor.imu_callback)
 
+    rospy.Subscriber('trigger', Bool, trigger)
+
     tf_buffer = tf2_ros.Buffer()
     tf2_ros.TransformListener(tf_buffer)
+
+    r = rospy.Rate(RATE)
     
     while not rospy.is_shutdown():
         try:
@@ -155,5 +171,5 @@ if __name__ == '__main__':
                 tf2_ros.ConnectivityException,
                 tf2_ros.ExtrapolationException):
             pass#rospy.logwarn('Transform lookup failed') 
-
+        r.sleep()
     monitor.print_summary()
