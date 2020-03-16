@@ -48,7 +48,8 @@ class Monitor:
 
         self.last_lin_acc = {'x':0, 'y':0, 'z':0}
         self.lin_acc = []
-
+    def __del__(self):
+        self.print_summary()
         
     def get_deviation(self, p):
         pl1 = self.last_closest_path[0]
@@ -98,7 +99,7 @@ class Monitor:
             x = trans.transform.translation.x
             y = trans.transform.translation.y
             #t = (rospy.Time.now()-self.init_time).to_sec()
-            t = rospy.Time.now()
+            t = rospy.Time.now().to_sec()
             self.position.append({'x':x, 'y':y})
             self.time.append(t)
             self.speed.append(self.last_speed)
@@ -140,7 +141,7 @@ if __name__ == '__main__':
     end_distance = rospy.get_param('~end_distance', 1.0)
     BASE_FRAME = rospy.get_param('~base_frame', 'map')
     TARGET_FRAME = rospy.get_param('~target_frame', 'base_link')
-    RATE = rospy.get_param('~rate', 100)
+    RATE = 100
 
     data_file = rospy.get_param('~file_name', 'performance_data.csv')
     monitor = Monitor(end_distance, data_file)
@@ -159,8 +160,12 @@ if __name__ == '__main__':
     tf2_ros.TransformListener(tf_buffer)
 
     r = rospy.Rate(RATE)
-    
+
+    now = rospy.get_rostime()
+    rospy.loginfo("Current_________ time %i %i", now.secs, now.nsecs)
+
     while not rospy.is_shutdown():
+        #rospy.loginfo('time')
         try:
             trans = tf_buffer.lookup_transform(BASE_FRAME,
                                                TARGET_FRAME,
@@ -171,4 +176,4 @@ if __name__ == '__main__':
                 tf2_ros.ExtrapolationException):
             pass#rospy.logwarn('Transform lookup failed') 
         r.sleep()
-    monitor.print_summary()
+    #monitor.print_summary()

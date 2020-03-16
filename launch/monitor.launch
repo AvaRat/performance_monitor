@@ -1,5 +1,4 @@
 <launch>
-    <node pkg="rosbag" type="play" name="player" output="screen" args="--clock /home/marcel/Documents/Article_RTOS_2020/Rosbagi/2020-02-23-21-36-17.bag"/>
 
     <node pkg="performance_monitor" type="performance_monitor.py" name="performance_monitor" output="screen">
         <param name="base_frame" type="string" value="map"/>
@@ -8,6 +7,11 @@
         <param name="file_name" type="string" value="2020-02-23-21-36-17.bag.csv"/>
 
 
-        <!--remap from="speed" to="model_speed"/-->
+        <!--remap from="speed" to="model_speed"/
+        
+            <node pkg="rosbag" type="play" name="player" output="screen" 
+
+             args="-clock /home/marcel/Documents/Article_RTOS_2020/Rosbagi/2020-02-23-21-36-17.bag"/>
+-->
     </node>
 </launch>
